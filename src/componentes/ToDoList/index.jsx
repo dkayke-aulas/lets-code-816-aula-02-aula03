@@ -1,18 +1,40 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { ToDoService } from "../../services/ToDo";
 import { Button } from "../Button";
 import { Input } from "../Input";
 import { ToDoItem } from "../ToDoItem";
 
 function ToDoList({ todos, getTodos }) {
 
-    const [todos_, setTodos] = useState(todos);
+    const [todos_, setTodos] = useState(todos || []);
     const [todo, setTodo] = useState("");
+    // const firstUpdate = useRef(true);
+    let firstUpdate = true;
 
     const notificar = () => {
         if(getTodos) {
             getTodos(todos_);
         }
     }
+
+    useEffect(() => {
+        if(!todos.length) {
+            ToDoService.getList().then((todos) => {
+                console.log(todos);
+                setTodos(todos);
+            });
+        }
+    }, []);
+    
+    useEffect(() => {
+        if(!firstUpdate) {
+            const put = ToDoService.putList(todos_);
+            console.log(put);
+        }
+        else {
+            firstUpdate = false;
+        }
+    }, [todos_]);
 
     const handleAdicionar = () => {
         // const novoArray = [...todos, todo];
@@ -39,7 +61,6 @@ function ToDoList({ todos, getTodos }) {
         const itensRestantes = todos_.filter((_, index) => index !== event.index);
         setTodos(itensRestantes);
         window.alert(`O item "${event.todo}" foi removido`);
-
         notificar();
     }
 
